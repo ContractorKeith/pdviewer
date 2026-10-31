@@ -41,6 +41,7 @@ struct FindBar: View {
             Divider()
         }
         .background(.bar)
+        .onExitCommand { close() }
         .onAppear { fieldFocused = true }
         .onChange(of: search.focusRequest) { fieldFocused = true }
     }

@@ -91,4 +91,33 @@ final class SearchControllerTests {
         }
         #expect(search.results.count == 1)
     }
+
+    /// Starting a second search while the first is mid-scan must not lose matches.
+    /// Experiment: PDFKit posts exactly one end event per scan. For a scan cancelled
+    /// mid-flight it is delivered synchronously inside `cancelFindString()`; a scan
+    /// that finished naturally posts its event asynchronously, which can land after
+    /// the next scan has started. `pendingScans` accounts for both.
+    @Test(arguments: [0, 5])
+    func rapidQueryChangeKeepsAllMatches(delayMs: Int) async {
+        let line = String(repeating: "alpha beta gamma ", count: 20)
+        let harness = Harness()
+        harness.view.document = TextPDF.make(pages: Array(repeating: line, count: 200))
+        harness.search.attach(harness.view)
+        retained.append(harness)
+        let search = harness.search
+
+        await run("beta", on: search)
+        let expected = search.results.count
+        #expect(expected == 4000)
+
+        search.search(for: "alpha")
+        try? await Task.sleep(for: .milliseconds(delayMs))
+        search.search(for: "beta")
+        for _ in 0..<2000 where search.isSearching {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        // Let any stale end event arrive, then compare.
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(search.results.count == expected)
+    }
 }

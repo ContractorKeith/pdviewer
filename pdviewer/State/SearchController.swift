@@ -29,6 +29,12 @@ final class SearchController {
     @ObservationIgnored private var debounceTask: Task<Void, Never>?
     @ObservationIgnored private var flushTask: Task<Void, Never>?
     @ObservationIgnored private var highlightsDirty = false
+    /// Find-end events received (diagnostic, used by tests).
+    @ObservationIgnored private(set) var endEventCount = 0
+    /// Scans begun minus end events seen. PDFKit posts one end event per scan,
+    /// cancelled or not, and a finished scan's event can arrive after the next
+    /// scan starts, so only the last outstanding event ends the current scan.
+    @ObservationIgnored private var pendingScans = 0
     @ObservationIgnored private weak var searchedDocument: PDFDocument?
     @ObservationIgnored private let delegateProxy = DelegateProxy()
 
@@ -85,6 +91,7 @@ final class SearchController {
         searchedDocument = doc
         doc.delegate = delegateProxy
         isSearching = true
+        pendingScans += 1
         let options: NSString.CompareOptions = caseSensitive ? [] : [.caseInsensitive]
         doc.beginFindString(query, withOptions: options)
     }
@@ -139,15 +146,23 @@ final class SearchController {
     // MARK: Delegate events (main actor)
 
     fileprivate func didMatch(_ selection: PDFSelection) {
-        guard isSearching else { return }
+        // Drop stragglers from a cancelled scan of a different query.
+        guard isSearching, matchesQuery(selection) else { return }
         selection.color = Self.matchColor
         results.append(selection)
         if currentIndex == nil { select(0) }
         scheduleHighlightFlush()
     }
 
+    private func matchesQuery(_ selection: PDFSelection) -> Bool {
+        guard let text = selection.string else { return false }
+        return text.compare(query, options: caseSensitive ? [] : [.caseInsensitive]) == .orderedSame
+    }
+
     fileprivate func didEndFind() {
-        guard isSearching else { return }
+        endEventCount += 1
+        pendingScans = max(0, pendingScans - 1)
+        guard isSearching, pendingScans == 0 else { return }
         isSearching = false
         applyHighlights()
     }
