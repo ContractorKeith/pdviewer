@@ -27,8 +27,14 @@ struct PDFFileDocumentTests {
         }
     }
 
-    @Test func isReadOnly() {
-        #expect(PDFFileDocument.writableContentTypes.isEmpty)
+    @Test func keepsOriginalBytes() throws {
+        let data = TestPDF.make(pages: 2)
+        let doc = try PDFFileDocument(data: data)
+        #expect(doc.data == data)
+    }
+
+    @Test func contentTypes() {
         #expect(PDFFileDocument.readableContentTypes == [.pdf])
+        #expect(PDFFileDocument.writableContentTypes == [.pdf])
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 /// View menu: zoom, display mode, sidebar.
 struct ViewCommands: Commands {
     @FocusedValue(\.readerController) private var reader
+    @AppStorage(Preferences.invertColors) private var invertColors = false
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
@@ -37,7 +38,8 @@ struct ViewCommands: Commands {
             }
             .pickerStyle(.menu)
             .disabled(reader == nil)
-
+            Toggle("Invert Colors", isOn: $invertColors)
+                .keyboardShortcut("i", modifiers: [.command, .option])
         }
         // Replaces the system sidebar item so the menu has one toggle, not two.
         CommandGroup(replacing: .sidebar) {

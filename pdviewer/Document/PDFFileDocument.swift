@@ -7,13 +7,15 @@ import UniformTypeIdentifiers
 /// main actor by PDFView, so the unchecked conformance is safe in practice.
 struct PDFFileDocument: FileDocument, @unchecked Sendable {
     static let readableContentTypes: [UTType] = [.pdf]
-    static let writableContentTypes: [UTType] = []
+    // Declared writable even though nothing ever edits: with no writable type,
+    // NSDocument marks the window "Locked" as soon as a key equivalent
+    // validates the File menu.
+    static let writableContentTypes: [UTType] = [.pdf]
 
     let pdf: PDFDocument
-
-    init(pdf: PDFDocument) {
-        self.pdf = pdf
-    }
+    /// Original bytes, so Save/Duplicate write the file back unchanged
+    /// instead of PDFKit's re-serialization.
+    let data: Data
 
     init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents else {
@@ -28,13 +30,11 @@ struct PDFFileDocument: FileDocument, @unchecked Sendable {
             throw CocoaError(.fileReadCorruptFile)
         }
         self.pdf = pdf
+        self.data = data
     }
 
-    /// Never called by DocumentGroup(viewing:). Present to satisfy FileDocument.
+    /// Only reached through Save As / Duplicate; nothing in the app edits.
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        guard let data = pdf.dataRepresentation() else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        return FileWrapper(regularFileWithContents: data)
+        FileWrapper(regularFileWithContents: data)
     }
 }

@@ -22,7 +22,7 @@ struct ReaderView: View {
                 }
         }
         .frame(minWidth: 560, minHeight: 360)
-        .toolbar { ReaderToolbar(controller: controller) }
+        .toolbar { ReaderToolbar(controller: controller, fileURL: fileURL) }
         .sheet(isPresented: $controller.isGoToPagePresented) { GoToPageSheet(controller: controller) }
         .navigationSubtitle(pageSubtitle)
         .focusedSceneValue(\.readerController, controller)

@@ -72,20 +72,20 @@ struct ReadingPositionStoreTests {
         let store = ReadingPositionStore(fileURL: paths.store)
         #expect(store.position(for: paths.pdf) == nil)
 
-        let (c, _) = makeController()
-        c.goToPage(index: 2)
-        store.save(for: paths.pdf, from: c)
+        let (reader, _) = makeController()
+        reader.goToPage(index: 2)
+        store.save(for: paths.pdf, from: reader)
         #expect(store.position(for: paths.pdf)?.pageIndex == 2)
     }
 
     @Test func evictsOldestBeyondCapacity() throws {
         let paths = try makePaths()
         let store = ReadingPositionStore(fileURL: paths.store, capacity: 3)
-        let (c, _) = makeController()
+        let (reader, _) = makeController()
         let dir = paths.pdf.deletingLastPathComponent()
         let urls = (0..<5).map { dir.appending(path: "f\($0).pdf") }
         for url in urls {
-            store.save(for: url, from: c)
+            store.save(for: url, from: reader)
             Thread.sleep(forTimeInterval: 0.01)  // distinct updatedAt
         }
         #expect(store.position(for: urls[0]) == nil)
@@ -96,10 +96,10 @@ struct ReadingPositionStoreTests {
     @Test func debounceCoalescesWrites() throws {
         let paths = try makePaths()
         let store = ReadingPositionStore(fileURL: paths.store, debounce: .seconds(60))
-        let (c, _) = makeController()
-        store.save(for: paths.pdf, from: c)
-        c.goToPage(index: 3)
-        store.save(for: paths.pdf, from: c)
+        let (reader, _) = makeController()
+        store.save(for: paths.pdf, from: reader)
+        reader.goToPage(index: 3)
+        store.save(for: paths.pdf, from: reader)
         #expect(store.writeCount == 0)
         store.flush()
         store.flush()  // nothing dirty: no second write

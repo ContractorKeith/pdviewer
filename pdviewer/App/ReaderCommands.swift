@@ -3,6 +3,7 @@ import SwiftUI
 /// Composes the menu bar. Each feature owns its own Commands struct.
 struct ReaderCommands: Commands {
     var body: some Commands {
+        FileCommands()
         ViewCommands()
         GoCommands()
         FindCommands()

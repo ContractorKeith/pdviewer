@@ -4,10 +4,10 @@ import Testing
 
 struct OutlineItemTests {
     private func node(_ label: String, page: PDFPage) -> PDFOutline {
-        let o = PDFOutline()
-        o.label = label
-        o.destination = PDFDestination(page: page, at: .zero)
-        return o
+        let outline = PDFOutline()
+        outline.label = label
+        outline.destination = PDFDestination(page: page, at: .zero)
+        return outline
     }
 
     @Test func buildsNestedTree() throws {

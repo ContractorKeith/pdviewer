@@ -154,9 +154,12 @@ final class SearchController {
         scheduleHighlightFlush()
     }
 
+    /// NFKC folding so ligatures in the PDF text ("ﬁle") still match the query ("file").
     private func matchesQuery(_ selection: PDFSelection) -> Bool {
-        guard let text = selection.string else { return false }
-        return text.compare(query, options: caseSensitive ? [] : [.caseInsensitive]) == .orderedSame
+        guard let text = selection.string?.precomposedStringWithCompatibilityMapping else { return false }
+        var options: String.CompareOptions = [.diacriticInsensitive, .widthInsensitive]
+        if !caseSensitive { options.insert(.caseInsensitive) }
+        return text.compare(query.precomposedStringWithCompatibilityMapping, options: options) == .orderedSame
     }
 
     fileprivate func didEndFind() {

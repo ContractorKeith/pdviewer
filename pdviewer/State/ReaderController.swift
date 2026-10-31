@@ -40,8 +40,6 @@ final class ReaderController {
     func attach(_ view: PDFView) {
         detach()
         pdfView = view
-        view.minScaleFactor = Self.minScaleFactor
-        view.maxScaleFactor = Self.maxScaleFactor
         let center = NotificationCenter.default
         let names: [Notification.Name] = [
             .PDFViewPageChanged, .PDFViewScaleChanged, .PDFViewDocumentChanged, .PDFViewDisplayModeChanged
@@ -139,5 +137,12 @@ final class ReaderController {
 
     func setDisplayMode(_ mode: PDFDisplayMode) {
         pdfView?.displayMode = mode
+    }
+
+    // MARK: Print
+
+    /// Standard print panel, pages auto-rotated to fit the paper.
+    func print() {
+        pdfView?.print(with: NSPrintInfo.shared, autoRotate: true)
     }
 }

@@ -1,3 +1,4 @@
+import CoreImage
 import PDFKit
 import SwiftUI
 
@@ -6,6 +7,16 @@ import SwiftUI
 struct PDFKitView: NSViewRepresentable {
     let document: PDFDocument
     let controller: ReaderController
+    @AppStorage(Preferences.invertColors) private var invertColors = false
+
+    /// Invert plus a 180° hue shift keeps colors recognizable while making
+    /// white pages dark.
+    private static let invertFilters: [CIFilter] = {
+        let invert = CIFilter(name: "CIColorInvert")!
+        let hue = CIFilter(name: "CIHueAdjust")!
+        hue.setValue(Double.pi, forKey: kCIInputAngleKey)
+        return [invert, hue]
+    }()
 
     final class Coordinator {
         let controller: ReaderController
@@ -19,6 +30,10 @@ struct PDFKitView: NSViewRepresentable {
     func makeNSView(context: Context) -> PDFView {
         let view = PDFView()
         view.document = document
+        // Limits first: setting them after autoScales on a zero-sized view
+        // clamps the scale to the floor and silently turns auto-fit off.
+        view.minScaleFactor = ReaderController.minScaleFactor
+        view.maxScaleFactor = ReaderController.maxScaleFactor
         view.autoScales = true
         view.displayMode = .singlePageContinuous
         view.displayDirection = .vertical
@@ -33,6 +48,10 @@ struct PDFKitView: NSViewRepresentable {
     func updateNSView(_ view: PDFView, context: Context) {
         if view.document !== document {
             view.document = document
+        }
+        let wantsInvert = invertColors
+        if (view.contentFilters.isEmpty) == wantsInvert {
+            view.contentFilters = wantsInvert ? Self.invertFilters : []
         }
     }
 

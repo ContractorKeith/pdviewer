@@ -75,6 +75,20 @@ struct ReaderControllerTests {
         #expect(controller.autoScales)
     }
 
+    @Test func attachKeepsAutoScales() {
+        let view = PDFView(frame: .zero)
+        view.document = PDFDocument(data: TestPDF.make(pages: 2))
+        view.minScaleFactor = ReaderController.minScaleFactor
+        view.maxScaleFactor = ReaderController.maxScaleFactor
+        view.autoScales = true
+        let controller = ReaderController()
+        controller.attach(view)
+        view.frame = NSRect(x: 0, y: 0, width: 600, height: 800)
+        controller.refresh()
+        #expect(controller.autoScales)
+        #expect(view.scaleFactor > ReaderController.minScaleFactor)
+    }
+
     @Test func fitPageSetsFixedScale() {
         let (controller, view) = makeReader()
         controller.fitPage()

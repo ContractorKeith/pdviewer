@@ -4,6 +4,7 @@ import SwiftUI
 /// Window toolbar: zoom, display mode, page position.
 struct ReaderToolbar: ToolbarContent {
     let controller: ReaderController
+    var fileURL: URL?
 
     private static let presets = [50, 75, 100, 125, 150, 200, 300, 400]
 
@@ -12,12 +13,21 @@ struct ReaderToolbar: ToolbarContent {
             PageField(controller: controller)
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            Picker("Display Mode", selection: displayMode) {
-                ForEach(DisplayModeOption.allCases) { option in
-                    Label(option.title, systemImage: option.symbol).tag(option.mode)
-                }
+            if let fileURL {
+                ShareLink(item: fileURL) { Label("Share", systemImage: "square.and.arrow.up") }
+                    .help("Share")
+                    .accessibilityLabel("Share")
             }
-            .pickerStyle(.menu)
+            Menu {
+                Picker("Display Mode", selection: displayMode) {
+                    ForEach(DisplayModeOption.allCases) { option in
+                        Label(option.title, systemImage: option.symbol).tag(option.mode)
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label("Display Mode", systemImage: DisplayModeOption.option(for: controller.displayMode).symbol)
+            }
             .help("Display Mode")
             .accessibilityLabel("Display Mode")
 
@@ -57,6 +67,10 @@ enum DisplayModeOption: CaseIterable, Identifiable {
 
     var id: Self { self }
 
+    static func option(for mode: PDFDisplayMode) -> DisplayModeOption {
+        allCases.first { $0.mode == mode } ?? .singleContinuous
+    }
+
     var mode: PDFDisplayMode {
         switch self {
         case .single: .singlePage
@@ -85,20 +99,22 @@ enum DisplayModeOption: CaseIterable, Identifiable {
     }
 }
 
-/// Editable page number with an "of N" label. Commits on Enter.
+/// Editable page number with an "of N" label. Shows the live page unless the
+/// user is typing; commits on Enter, discards on blur.
 private struct PageField: View {
     let controller: ReaderController
-    @State private var text = ""
+    @State private var draft: String?
     @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: 4) {
-            TextField("Page", text: $text)
+            TextField("Page", text: text)
                 .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 52)
                 .focused($focused)
                 .onSubmit(commit)
+                .onChange(of: focused) { if !focused { draft = nil } }
                 .help("Go to Page")
                 .accessibilityLabel("Page Number")
             Text("of \(controller.pageCount)")
@@ -106,18 +122,20 @@ private struct PageField: View {
                 .accessibilityLabel("of \(controller.pageCount) pages")
         }
         .disabled(controller.pageCount == 0)
-        .onAppear(perform: sync)
-        .onChange(of: controller.currentPageIndex) { if !focused { sync() } }
-        .onChange(of: controller.pageCount) { sync() }
-        .onChange(of: focused) { if !focused { sync() } }
     }
 
-    private func sync() { text = controller.pageCount == 0 ? "" : "\(controller.currentPageIndex + 1)" }
+    private var text: Binding<String> {
+        Binding(
+            get: { draft ?? (controller.pageCount == 0 ? "" : "\(controller.currentPageIndex + 1)") },
+            set: { draft = $0 }
+        )
+    }
 
     private func commit() {
-        if let number = Int(text.trimmingCharacters(in: .whitespaces)) {
+        if let number = Int((draft ?? "").trimmingCharacters(in: .whitespaces)) {
             controller.goToPage(index: number - 1)
         }
-        sync()
+        draft = nil
+        focused = false
     }
 }

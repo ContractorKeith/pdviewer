@@ -1,6 +1,6 @@
 # pdviewer — v1 Plan
 
-Status: draft, 2026-10-31. No code yet.
+Status: v1 built 2026-10-31. Milestones 1–6 done; 7 (ship) in progress. Kept as the record of what was planned and why.
 
 ## Goal
 
@@ -76,12 +76,12 @@ SwiftUI content view. Decide this in milestone 1 with a spike, not on paper.
 
 | # | Milestone | Done when |
 |---|-----------|-----------|
-| 1 | Skeleton | Xcode project, app opens a PDF from Finder and renders it in `PDFView`. Document-architecture decision made and recorded. |
-| 2 | Reading | Zoom modes, display modes, keyboard paging, toolbar. Feels right on a 300-page file. |
-| 3 | Navigate | Sidebar with outline + thumbnails, go-to-page, history. |
-| 4 | Search | Find bar with highlights and next/prev. |
-| 5 | Remember | Reading position persisted and restored; recents; window restoration. |
-| 6 | Polish | Dark mode, invert toggle, print/share, app icon, menu audit, accessibility pass (VoiceOver labels, keyboard-only use). |
+| 1 ✅ | Skeleton | Xcode project, app opens a PDF from Finder and renders it in `PDFView`. Document-architecture decision made and recorded. |
+| 2 ✅ | Reading | Zoom modes, display modes, keyboard paging, toolbar. Feels right on a 300-page file. |
+| 3 ✅ | Navigate | Sidebar with outline + thumbnails, go-to-page, history. |
+| 4 ✅ | Search | Find bar with highlights and next/prev. |
+| 5 ✅ | Remember | Reading position persisted and restored; recents; window restoration. |
+| 6 ✅ | Polish | Dark mode, invert toggle, print/share, app icon, menu audit, accessibility pass (VoiceOver labels, keyboard-only use). |
 | 7 | Ship | Developer ID-signed, notarized DMG (local signing first, GitHub Actions later), `CONTRIBUTING.md`, release notes, 0.1.0 tag. |
 
 Each milestone is a PR. Milestone 1 gets a short spike doc under `docs/features/document-architecture/`.
