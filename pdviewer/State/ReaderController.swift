@@ -40,6 +40,8 @@ final class ReaderController {
     func attach(_ view: PDFView) {
         detach()
         pdfView = view
+        view.minScaleFactor = Self.minScaleFactor
+        view.maxScaleFactor = Self.maxScaleFactor
         let center = NotificationCenter.default
         let names: [Notification.Name] = [
             .PDFViewPageChanged, .PDFViewScaleChanged, .PDFViewDocumentChanged, .PDFViewDisplayModeChanged
@@ -62,7 +64,8 @@ final class ReaderController {
         pdfView = nil
     }
 
-    private func refresh() {
+    /// Copies PDFView state into the mirrored properties. Called from notifications.
+    func refresh() {
         guard let view = pdfView else { return }
         pageCount = view.document?.pageCount ?? 0
         if let page = view.currentPage, let index = view.document?.index(for: page) {
@@ -92,30 +95,46 @@ final class ReaderController {
 
     // MARK: Zoom
 
-    func zoomIn() { pdfView?.zoomIn(nil) }
-    func zoomOut() { pdfView?.zoomOut(nil) }
+    static let minScaleFactor: CGFloat = 0.25
+    static let maxScaleFactor: CGFloat = 8
+    private static let zoomStep: CGFloat = 1.25
 
-    func actualSize() {
-        guard let view = pdfView else { return }
-        view.autoScales = false
-        view.scaleFactor = 1
-    }
+    /// Current zoom as a whole percentage.
+    var zoomPercent: Int { Int((scaleFactor * 100).rounded()) }
+
+    func zoomIn() { setScale((pdfView?.scaleFactor ?? 1) * Self.zoomStep) }
+    func zoomOut() { setScale((pdfView?.scaleFactor ?? 1) / Self.zoomStep) }
+
+    func actualSize() { setScale(1) }
 
     /// Fit page width to the view. PDFKit's autoScales does exactly this.
     func fitWidth() {
         pdfView?.autoScales = true
     }
 
+    /// Fit the whole current page (width and height) in the view.
     func fitPage() {
         guard let view = pdfView else { return }
-        view.autoScales = false
-        view.scaleFactor = view.scaleFactorForSizeToFit
+        let fallback = view.scaleFactorForSizeToFit
+        guard let page = view.currentPage else { return setScale(fallback) }
+        var size = page.bounds(for: view.displayBox).size
+        if page.rotation % 180 != 0 { size = CGSize(width: size.height, height: size.width) }
+        let margins = view.displaysPageBreaks ? view.pageBreakMargins : NSEdgeInsets()
+        let available = CGSize(
+            width: view.bounds.width - margins.left - margins.right,
+            height: view.bounds.height - margins.top - margins.bottom
+        )
+        guard size.width > 0, size.height > 0, available.width > 0, available.height > 0 else {
+            return setScale(fallback)
+        }
+        setScale(min(available.width / size.width, available.height / size.height))
     }
 
+    /// Fixed scale, clamped to the zoom limits. Turns off fit-to-width.
     func setScale(_ scale: CGFloat) {
         guard let view = pdfView else { return }
         view.autoScales = false
-        view.scaleFactor = min(max(scale, view.minScaleFactor), view.maxScaleFactor)
+        view.scaleFactor = min(max(scale, Self.minScaleFactor), Self.maxScaleFactor)
     }
 
     func setDisplayMode(_ mode: PDFDisplayMode) {

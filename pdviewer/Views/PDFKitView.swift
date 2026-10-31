@@ -23,6 +23,8 @@ struct PDFKitView: NSViewRepresentable {
         view.displayMode = .singlePageContinuous
         view.displayDirection = .vertical
         view.displaysPageBreaks = true
+        view.pageBreakMargins = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        view.backgroundColor = .underPageBackgroundColor
         view.interpolationQuality = .high
         controller.attach(view)
         return view
