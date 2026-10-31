@@ -17,7 +17,10 @@
   so the freshly opened page-0 state cannot overwrite the saved position.
 
 ## What macOS gives us for free
-- `DocumentGroup` restores open windows on relaunch and provides File > Open Recent.
+- `DocumentGroup` provides File > Open Recent, and restores open windows on relaunch
+  *unless* System Settings > Desktop & Dock > "Close windows when quitting an application"
+  is on (the default). With that on, a clean quit forgets windows and the next launch shows
+  the Open panel; a crash or kill still restores. Nothing for the app to do here.
 - Verified: open plans.pdf, go to page 4, quit, relaunch. The window came back as
   "plans.pdf – Page 4 of 27" (a second window from an earlier session, manual.pdf, also came back).
   Window restoration reopens the file but not its page or zoom; `ReadingPositionStore.restore`
