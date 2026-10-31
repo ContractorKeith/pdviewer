@@ -27,3 +27,7 @@ Package.resolved
 *.xcodeproj
 pdviewer/Resources/Info.plist
 pdviewer/Resources/pdviewer.entitlements
+
+# Agent worktrees and release output
+.claude/worktrees/
+dist/
