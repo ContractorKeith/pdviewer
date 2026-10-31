@@ -73,6 +73,53 @@ final class SearchControllerTests {
         #expect(!search.isSearching)
     }
 
+    @Test func reopenRestoresRetainedQueryAndNavigation() async {
+        let (search, view) = makeSearch()
+        await run("apple", on: search)
+        // Done, Escape, and Hide Find Bar all close through clear().
+        for _ in 0..<3 {
+            search.clear()
+            #expect(search.query == "apple")
+            #expect(view.highlightedSelections == nil)
+            let focus = search.focusRequest
+            search.requestFocus()
+            #expect(search.focusRequest == focus + 1)
+            for _ in 0..<200 where search.isSearching {
+                try? await Task.sleep(for: .milliseconds(5))
+            }
+            #expect(!search.isSearching)
+            #expect(search.results.count == 3)
+            #expect(view.highlightedSelections?.count == 3)
+            #expect(search.statusText == "1 of 3")
+            search.next()
+            #expect(search.currentIndex == 1)
+            #expect(view.currentSelection?.string?.lowercased() == "apple")
+            search.previous()
+            #expect(search.currentIndex == 0)
+            search.previous()
+            #expect(search.currentIndex == 2)
+        }
+    }
+
+    @Test(arguments: ["apple", "zebra"])
+    func refocusingDoesNotRescan(text: String) async {
+        let (search, _) = makeSearch()
+        search.search(for: text)
+        search.requestFocus()
+        for _ in 0..<200 where search.isSearching {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(search.endEventCount == 1)
+        search.next()
+        let index = search.currentIndex
+        let focus = search.focusRequest
+        search.requestFocus()
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(search.focusRequest == focus + 1)
+        #expect(search.endEventCount == 1)
+        #expect(search.currentIndex == index)
+    }
+
     @Test func newQueryReplacesResults() async {
         let (search, _) = makeSearch()
         await run("apple", on: search)

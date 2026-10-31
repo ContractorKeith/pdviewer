@@ -29,6 +29,7 @@ final class SearchController {
     @ObservationIgnored private var debounceTask: Task<Void, Never>?
     @ObservationIgnored private var flushTask: Task<Void, Never>?
     @ObservationIgnored private var highlightsDirty = false
+    @ObservationIgnored private var resultsCleared = true
     /// Find-end events received (diagnostic, used by tests).
     @ObservationIgnored private(set) var endEventCount = 0
     /// Scans begun minus end events seen. PDFKit posts one end event per scan,
@@ -61,7 +62,11 @@ final class SearchController {
         pdfView = nil
     }
 
-    func requestFocus() { focusRequest += 1 }
+    /// Reopening restores a retained query; refocusing an active search only focuses.
+    func requestFocus() {
+        if resultsCleared, !query.isEmpty { search() }
+        focusRequest += 1
+    }
 
     // MARK: Searching
 
@@ -88,6 +93,7 @@ final class SearchController {
         stopScan()
         resetResults()
         guard let doc = pdfView?.document, !query.isEmpty else { return }
+        resultsCleared = false
         searchedDocument = doc
         doc.delegate = delegateProxy
         isSearching = true
@@ -115,6 +121,7 @@ final class SearchController {
 
     /// Empties results, highlights, and selection (find bar closed).
     func clear() {
+        resultsCleared = true
         debounceTask?.cancel()
         stopScan()
         resetResults()
