@@ -91,6 +91,13 @@ final class ReaderController {
         if let page = doc.page(at: clamped) { view.go(to: page) }
     }
 
+    /// Toolbar input is 1-based; reject invalid values before converting to an index.
+    func submitPageNumber(_ text: String) {
+        guard let number = Int(text.trimmingCharacters(in: .whitespaces)),
+              number >= 1, number <= pageCount else { return }
+        goToPage(index: number - 1)
+    }
+
     // MARK: Zoom
 
     static let minScaleFactor: CGFloat = 0.25
