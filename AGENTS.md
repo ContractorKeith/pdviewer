@@ -1,36 +1,53 @@
 # pdviewer
 
-A fast, minimal, open-source (MIT) macOS app for viewing PDFs. Built in Swift with
-SwiftUI and Apple's PDFKit, no third-party dependencies. For anyone who wants a
-lighter, quicker PDF viewer than Preview or a browser tab. "Done" for v1 means: open
-a PDF, page through it, zoom, search text, see the outline/thumbnails, and remember
-where you left off.
+A fast, minimal, open-source (MIT) macOS app for viewing PDFs. Swift 6, SwiftUI, and
+Apple's PDFKit, no third-party dependencies. General-purpose: for anyone who wants a
+lighter, quicker PDF viewer than Preview. v1 is done when you can open a PDF, page
+through it, zoom, search text, see the outline/thumbnails, and it remembers where you
+left off.
 
 ## Status
-skeleton — last touched 2026-10-31. Plan written, no code yet. See `docs/PLAN.md`.
+active — milestone 1 (skeleton) done 2026-10-31. Milestones 2–5 in progress.
+Plan: `docs/PLAN.md`. Architecture decision: `docs/features/document-architecture/DECISION.md`.
 
 ## Commands
 ```bash
-# build (once the Xcode project exists):
-xcodebuild -scheme pdviewer -configuration Debug build
-# test:
-xcodebuild -scheme pdviewer test
-# open in Xcode:
-open pdviewer.xcodeproj
+make gen     # regenerate pdviewer.xcodeproj from project.yml (xcodegen)
+make build   # Debug build into build/
+make test    # unit tests (Swift Testing)
+make run PDF=path/to/file.pdf   # build and open the app with a file
+make lint    # swiftlint
 ```
+Requires Xcode 16+ and `brew install xcodegen`. The `.xcodeproj`, `Info.plist`, and
+entitlements are generated and gitignored; edit `project.yml` instead.
 
 ## Architecture
-- `docs/PLAN.md` — the v1 plan and milestones. Read it before any implementation work.
-- `pdviewer/` — app source (SwiftUI app target). Created in milestone 1.
-- `pdviewerTests/` — unit tests for non-UI logic.
+```
+pdviewer/
+  App/        pdviewerApp (DocumentGroup(viewing:)), ReaderCommands composes
+              ViewCommands / GoCommands / FindCommands (one file per menu).
+  Document/   PDFFileDocument: read-only FileDocument wrapping PDFDocument.
+  State/      ReaderController: the one seam between UI and PDFView. Mirrors
+              PDFView state, exposes paging/zoom actions, owns the
+              sub-controllers SearchController, NavigationHistory.
+              ReadingPositionStore: per-file last position, app-wide.
+  Views/      ReaderView (layout + wiring only), PDFKitView (NSViewRepresentable),
+              SidebarView, ReaderToolbar, FindBar.
+pdviewerTests/  Swift Testing. TestPDF.make() builds in-memory fixtures.
+```
+Views never touch `PDFView` directly; they go through `ReaderController`.
 
 ## Conventions & Gotchas
-- macOS only. No iOS, iPadOS, or Catalyst targets.
+- macOS 15+ only. No iOS, iPadOS, or Catalyst targets.
 - PDFKit does the rendering. Do not add a PDF library (PDFium, MuPDF, etc.) without a
   stated reason PDFKit cannot meet.
-- SwiftUI for the shell; wrap `PDFView` in `NSViewRepresentable` where SwiftUI falls short.
-- Keep the app sandboxed. File access is user-opened files only (plus security-scoped
-  bookmarks for recents).
+- Swift 6 language mode, strict concurrency. UI-facing classes are `@MainActor`.
+  `NotificationCenter` block observers run on `.main`; wrap bodies in
+  `MainActor.assumeIsolated`.
+- `@Observable` classes: anything views should not observe gets `@ObservationIgnored`.
+- Keep the app sandboxed. File access is user-opened files only, plus security-scoped
+  bookmarks for remembering positions.
+- Menu shortcuts: ⌘+/⌘-/⌘0 zoom, ⌘←/⌘→ page, ⌘[/⌘] back/forward, ⌘F find.
 - Commit format `<type>: <description>`. Agent commits are authored by @ContractorKeith only.
 
 ## Out of Scope

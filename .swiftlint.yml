@@ -1,0 +1,15 @@
+included:
+  - pdviewer
+  - pdviewerTests
+disabled_rules:
+  - trailing_whitespace
+  - todo
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+line_length:
+  warning: 120
+  ignores_comments: true
+identifier_name:
+  min_length: 2
+  excluded: [x, y, i, id]
