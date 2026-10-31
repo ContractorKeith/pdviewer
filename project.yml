@@ -71,6 +71,20 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.contractorkeith.pdviewerTests
         GENERATE_INFOPLIST_FILE: true
 
+  pdviewerUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: pdviewerUITests
+      - path: pdviewerTests/TextPDFFixture.swift
+    dependencies:
+      - target: pdviewer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.contractorkeith.pdviewerUITests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_TARGET_NAME: pdviewer
+
 schemes:
   pdviewer:
     build:
@@ -84,3 +98,13 @@ schemes:
       gatherCoverageData: false
       targets:
         - pdviewerTests
+  # UI smoke test is its own scheme: it launches the app and is slower.
+  pdviewerUITests:
+    build:
+      targets:
+        pdviewer: all
+        pdviewerUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - pdviewerUITests
