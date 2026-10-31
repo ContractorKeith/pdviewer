@@ -23,6 +23,7 @@ struct ReaderView: View {
         }
         .frame(minWidth: 560, minHeight: 360)
         .toolbar { ReaderToolbar(controller: controller) }
+        .sheet(isPresented: $controller.isGoToPagePresented) { GoToPageSheet(controller: controller) }
         .navigationSubtitle(pageSubtitle)
         .focusedSceneValue(\.readerController, controller)
         .task { ReadingPositionStore.shared.restore(for: fileURL, into: controller) }
