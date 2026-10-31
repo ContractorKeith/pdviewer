@@ -132,9 +132,7 @@ private struct PageField: View {
     }
 
     private func commit() {
-        if let number = Int((draft ?? "").trimmingCharacters(in: .whitespaces)) {
-            controller.goToPage(index: number - 1)
-        }
+        controller.submitPageNumber(draft ?? "")
         draft = nil
         focused = false
     }

@@ -34,6 +34,32 @@ struct ReaderControllerTests {
         #expect(controller.currentPageIndex == 4)
     }
 
+    @Test(arguments: ["1", "5", " 1 ", " 5 "])
+    func toolbarPageNumberAcceptsBoundaries(_ text: String) {
+        let (controller, view) = makeReader()
+        controller.goToPage(index: 2)
+        controller.submitPageNumber(text)
+        #expect(pageIndex(view) == Int(text.trimmingCharacters(in: .whitespaces))! - 1)
+    }
+
+    @Test(arguments: [String(Int.min), String(Int.max), "0", "-1", "6", "abc", "", "9223372036854775808",
+                      "-9223372036854775809"])
+    func toolbarPageNumberRejectsInvalidInput(_ text: String) {
+        let (controller, view) = makeReader()
+        controller.goToPage(index: 2)
+        controller.submitPageNumber(text)
+        controller.refresh()
+        #expect(pageIndex(view) == 2)
+        #expect(controller.currentPageIndex == 2)
+    }
+
+    @Test func toolbarPageNumberWithoutDocumentIsIgnored() {
+        let controller = ReaderController()
+        controller.submitPageNumber("1")
+        #expect(controller.pageCount == 0)
+        #expect(controller.currentPageIndex == 0)
+    }
+
     @Test func setScaleClamps() {
         let (controller, view) = makeReader()
         controller.setScale(100)
