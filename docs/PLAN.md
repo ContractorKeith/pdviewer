@@ -9,9 +9,8 @@ you were. Nothing else. MIT licensed so anyone can fork it.
 
 ## Who it's for
 
-Anyone on a Mac who opens a lot of PDFs and finds Preview slow or cluttered. Construction
-folks reading plan sets and specs are a natural first audience, but nothing in v1 is
-domain-specific.
+Anyone on a Mac who opens a lot of PDFs and finds Preview slow or cluttered. Strictly
+general-purpose: no domain-specific features in v1.
 
 ## Stack
 
@@ -49,7 +48,8 @@ available without back-compat shims.
 - Annotation, form filling, signing, redaction, page reordering, merge/split.
 - Cloud storage integration, sync, accounts, analytics, update checks.
 - Plugin system or scripting.
-- App Store distribution (ship a notarized DMG from GitHub Releases first).
+- App Store distribution. GitHub Releases only: Developer ID-signed, notarized DMG.
+  Keep the app sandboxed anyway; it costs little and keeps the App Store door open.
 
 ## Architecture
 
@@ -82,7 +82,7 @@ SwiftUI content view. Decide this in milestone 1 with a spike, not on paper.
 | 4 | Search | Find bar with highlights and next/prev. |
 | 5 | Remember | Reading position persisted and restored; recents; window restoration. |
 | 6 | Polish | Dark mode, invert toggle, print/share, app icon, menu audit, accessibility pass (VoiceOver labels, keyboard-only use). |
-| 7 | Ship | Notarized DMG via GitHub Actions, `CONTRIBUTING.md`, release notes, 0.1.0 tag. |
+| 7 | Ship | Developer ID-signed, notarized DMG (local signing first, GitHub Actions later), `CONTRIBUTING.md`, release notes, 0.1.0 tag. |
 
 Each milestone is a PR. Milestone 1 gets a short spike doc under `docs/features/document-architecture/`.
 
@@ -104,14 +104,15 @@ Each milestone is a PR. Milestone 1 gets a short spike doc under `docs/features/
   (window restoration, read-only files). Spike it early.
 - **Sandbox + recents**: security-scoped bookmarks are fiddly. Isolate in one type with
   tests.
-- **Xcode license** on this machine has not been accepted yet. Run
-  `sudo xcodebuild -license` before milestone 1.
 
 ## Later (v2 candidates, not committed)
 
+Keep v1 architecture from blocking these, but build none of them yet.
+
+- Measurement tool for scaled drawings (set scale, measure length/area).
+- Split view: two pages or two documents side by side.
+- Page organization: reorder, rotate, add, delete pages; merge and split files.
+  This turns the app from read-only to read-write, so the document layer in
+  milestone 1 should not assume documents never change.
 - Annotations (highlight, note, freehand) via PDFKit's `PDFAnnotation`.
-- Split view: two pages or two documents side by side (useful for plans vs specs).
-- Measurement tool for scaled drawings. This is where the construction angle would
-  start to matter.
 - Quick Look extension / Spotlight importer.
-- App Store build.

@@ -34,6 +34,9 @@ open pdviewer.xcodeproj
 - Commit format `<type>: <description>`. Agent commits are authored by @ContractorKeith only.
 
 ## Out of Scope
-- Editing, annotating, or signing PDFs (v1).
+- Editing, annotating, or signing PDFs (v1). Measure, split view, and page
+  organize/add/delete are v2 candidates; see `docs/PLAN.md`.
+- Domain-specific features. General-purpose viewer only.
 - Cloud sync, accounts, or telemetry.
+- App Store. Distribution is Developer ID-signed DMG on GitHub Releases.
 - Windows, Linux, iOS builds.
