@@ -116,6 +116,9 @@ final class ReadingPositionStore {
         url.standardizedFileURL.resolvingSymlinksInPath().path
     }
 
+    private static let displayModes: [PDFDisplayMode] =
+        [.singlePage, .singlePageContinuous, .twoUp, .twoUpContinuous]
+
     private static func isReady(_ controller: ReaderController) -> Bool {
         controller.pdfView != nil && controller.pageCount > 0
     }
@@ -130,10 +133,12 @@ final class ReadingPositionStore {
         guard let entry = positions[key],
               entry.fileSize == nil || entry.fileSize == Self.fileSize(of: url),
               entry.pageIndex >= 0, entry.pageIndex < controller.pageCount else { return }
-        if let mode = PDFDisplayMode(rawValue: entry.displayMode) {
+        // PDFDisplayMode is an imported C enum: init(rawValue:) never fails, and an
+        // out-of-range value makes PDFView raise NSRangeException. Match known cases only.
+        if let mode = Self.displayModes.first(where: { $0.rawValue == entry.displayMode }) {
             controller.setDisplayMode(mode)
         }
-        if entry.autoScales {
+        if entry.autoScales || !entry.scaleFactor.isFinite {
             controller.fitWidth()
         } else {
             controller.setScale(CGFloat(entry.scaleFactor))
@@ -148,7 +153,9 @@ final class ReadingPositionStore {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         do {
-            positions = try decoder.decode([String: ReadingPosition].self, from: data)
+            // Decode per entry so one malformed record does not discard the rest.
+            let entries = try decoder.decode([String: LenientPosition].self, from: data)
+            positions = entries.compactMapValues(\.value)
         } catch {
             log.error("Ignoring corrupt positions file: \(error.localizedDescription)")
         }
@@ -169,5 +176,13 @@ final class ReadingPositionStore {
             guard !Task.isCancelled else { return }
             flush()
         }
+    }
+}
+
+/// Decodes a stored position, or nil if that one entry is malformed.
+private struct LenientPosition: Decodable {
+    let value: ReadingPosition?
+    init(from decoder: Decoder) throws {
+        value = try? ReadingPosition(from: decoder)
     }
 }

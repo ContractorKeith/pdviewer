@@ -149,7 +149,8 @@ The original plan and milestones are in [docs/PLAN.md](docs/PLAN.md).
 - The only entitlements are user-selected read-only file access, app-scoped bookmarks,
   and printing.
 - No network code exists in the app. Nothing is logged or sent anywhere.
-- Hardened runtime is enabled; release builds are Developer ID signed and notarized.
+- Hardened runtime is enabled; release builds are meant to be Developer ID signed and
+  notarized (no signed release has been published yet).
 
 ## Install
 
@@ -175,7 +176,7 @@ not checked in; edit the YAML and regenerate.
 ### Tests
 
 ```bash
-make test     # 35 unit tests (Swift Testing): document loading, controller logic,
+make test     # 44 unit tests (Swift Testing): document loading, controller logic,
               # outline flattening, history, search, reading-position store
 make uitest   # one XCUITest smoke run: launches the app with a generated PDF,
               # checks title, outline, search, and invert, saves screenshots

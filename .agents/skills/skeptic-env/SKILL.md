@@ -82,6 +82,14 @@ restore it afterwards. Note in the report what you changed.
   not run.
 - `screencapture` may be blocked; use `make uitest` attachments for visual
   evidence.
+- The Mac Studio has only Command Line Tools (no Xcode) as of 2026-11-01, so
+  `make build|test|uitest|run` and `release.sh` cannot run there. Either install
+  Xcode on it first or run those checks on the Air. `swiftlint` there needs
+  `TOOLCHAIN_DIR=/Library/Developer/CommandLineTools`.
+- `-only-testing:` with Swift Testing needs suite names (or `name()`); a bare
+  test name silently runs 0 tests and reports TEST SUCCEEDED.
+- An uncaught ObjC exception in a unit test hangs the test host rather than
+  failing; run `make test` under `timeout`.
 - Xcode prints CoreSimulator version warnings on macOS tests; not a finding
   on their own.
 
@@ -90,3 +98,6 @@ restore it afterwards. Note in the report what you changed.
 - 2026-10-31, `82f3603`, `worklog/reports/pdviewer-review-2026-10-31.md`:
   #2 Int.min in the toolbar page field trapped on subtraction (fixed, PR #4);
   #1 reopening Find kept the query but lost results (fixed, PR #3).
+- 2026-11-01, `f3e8082`, `worklog/reports/pdviewer-review-2026-11-01.md`:
+  stored displayMode outside 0...3 crashed on open; fit-width clamped at 25% on
+  48-inch sheets; one bad store entry wiped all positions (fixed, round-2 PR).

@@ -122,4 +122,48 @@ struct ReadingPositionStoreTests {
         second.restore(for: paths.pdf, into: c2)
         #expect(c2.currentPageIndex == 5)
     }
+
+    /// Write a raw positions.json whose entries are keyed by the test PDFs.
+    private func writeStore(_ json: String, to url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(json.utf8).write(to: url)
+    }
+
+    private func entry(_ url: URL, page: Int, mode: Int = 1, scale: String = "1.5") -> String {
+        let key = ReadingPositionStore.key(for: url)
+        return """
+        "\(key)": {"pageIndex": \(page), "scaleFactor": \(scale), "autoScales": false,
+          "displayMode": \(mode), "updatedAt": "2026-10-31T12:00:00Z"}
+        """
+    }
+
+    @Test(arguments: [-1, 4, 99, Int.max])
+    func outOfRangeDisplayModeIsIgnored(_ mode: Int) throws {
+        let paths = try makePaths()
+        try writeStore("{\(entry(paths.pdf, page: 3, mode: mode))}", to: paths.store)
+        let (reader, view) = makeController()
+        // Would raise NSRangeException inside PDFView.setDisplayMode before the fix.
+        ReadingPositionStore(fileURL: paths.store).restore(for: paths.pdf, into: reader)
+        #expect(view.displayMode == .singlePageContinuous)
+        #expect(reader.currentPageIndex == 3)
+    }
+
+    @Test func validDisplayModeIsRestored() throws {
+        let paths = try makePaths()
+        try writeStore("{\(entry(paths.pdf, page: 2, mode: 2))}", to: paths.store)
+        let (reader, view) = makeController()
+        ReadingPositionStore(fileURL: paths.store).restore(for: paths.pdf, into: reader)
+        #expect(view.displayMode == .twoUp)
+    }
+
+    @Test func oneMalformedEntryKeepsTheOthers() throws {
+        let paths = try makePaths()
+        let other = paths.pdf.deletingLastPathComponent().appending(path: "other.pdf")
+        let bad = "\"\(ReadingPositionStore.key(for: other))\": {\"pageIndex\": \"3\"}"
+        try writeStore("{\(bad), \(entry(paths.pdf, page: 4))}", to: paths.store)
+        let store = ReadingPositionStore(fileURL: paths.store)
+        #expect(store.position(for: paths.pdf)?.pageIndex == 4)
+        #expect(store.position(for: other) == nil)
+    }
 }

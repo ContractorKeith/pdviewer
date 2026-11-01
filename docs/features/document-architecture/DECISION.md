@@ -14,8 +14,9 @@ wrapped in `PDFKitView` (`NSViewRepresentable`) and driven through `ReaderContro
   under the hood with zero AppKit glue.
 - Menus (`Commands`) and toolbars are plain SwiftUI. Window-scoped state reaches menus via
   `FocusedValues.readerController`.
-- Read-only is explicit: `viewing:` plus empty `writableContentTypes`. No autosave, no
-  Save menu.
+- Read-only by intent: `viewing:`, no autosave. `writableContentTypes` is `[.pdf]`
+  because an empty set makes NSDocument title windows "— Locked"; File > Save exists
+  and writes the original bytes back (the file's modified time changes).
 - Far less code for the same native behavior. Less to review, less to break.
 
 ## Costs accepted
