@@ -100,7 +100,8 @@ final class ReaderController {
 
     // MARK: Zoom
 
-    static let minScaleFactor: CGFloat = 0.25
+    /// PDFView's own hard floor; low enough for fit-width on 48-inch plan sheets.
+    static let minScaleFactor: CGFloat = 0.1
     static let maxScaleFactor: CGFloat = 8
     private static let zoomStep: CGFloat = 1.25
 

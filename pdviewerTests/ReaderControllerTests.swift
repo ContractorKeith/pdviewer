@@ -7,6 +7,9 @@ struct ReaderControllerTests {
     /// Controller attached to a window-less PDFView holding a 5-page document.
     private func makeReader(pages: Int = 5) -> (ReaderController, PDFView) {
         let view = PDFView(frame: NSRect(x: 0, y: 0, width: 600, height: 800))
+        // Same limits PDFKitView sets; PDFView's own default floor is 0.25.
+        view.minScaleFactor = ReaderController.minScaleFactor
+        view.maxScaleFactor = ReaderController.maxScaleFactor
         view.document = PDFDocument(data: TestPDF.make(pages: pages))
         let controller = ReaderController()
         controller.attach(view)
@@ -120,5 +123,26 @@ struct ReaderControllerTests {
         controller.fitPage()
         #expect(view.autoScales == false)
         #expect(view.scaleFactor >= ReaderController.minScaleFactor)
+    }
+
+    /// A 48x36 in sheet (3456x2592 pt) must fit a 650 pt wide view, below the old 25% floor.
+    /// Built like PDFKitView: zero-sized at first, then laid out, which is when the floor applies.
+    @Test func fitWidthFitsLargeSheets() {
+        let doc = PDFDocument()
+        let page = PDFPage()
+        page.setBounds(NSRect(x: 0, y: 0, width: 3456, height: 2592), for: .mediaBox)
+        doc.insert(page, at: 0)
+        let view = PDFView(frame: .zero)
+        view.document = doc
+        view.minScaleFactor = ReaderController.minScaleFactor
+        view.maxScaleFactor = ReaderController.maxScaleFactor
+        view.autoScales = true
+        let controller = ReaderController()
+        controller.attach(view)
+        view.frame = NSRect(x: 0, y: 0, width: 650, height: 450)
+        view.layoutDocumentView()
+        controller.fitWidth()
+        #expect(view.autoScales)
+        #expect(3456 * view.scaleFactor <= 650)
     }
 }

@@ -10,6 +10,9 @@ left off.
 active — v1 feature-complete 2026-10-31 (milestones 1–6). Milestone 7 (signed DMG
 release) pending Keith's Developer ID signing. Plan: `docs/PLAN.md`. Architecture
 decision: `docs/features/document-architecture/DECISION.md`.
+Skeptic reviews: round 2 (2026-11-01, `f3e8082`) fixed #5, #6, #7; open weaknesses
+(unused bookmarks entitlement, File > Save touches mtime, no branch protection) are in
+`worklog/reports/pdviewer-review-2026-11-01.md`.
 
 ## Commands
 ```bash
@@ -51,8 +54,8 @@ Views never touch `PDFView` directly; they go through `ReaderController`.
   `NotificationCenter` block observers run on `.main`; wrap bodies in
   `MainActor.assumeIsolated`.
 - `@Observable` classes: anything views should not observe gets `@ObservationIgnored`.
-- Keep the app sandboxed. File access is user-opened files only, plus security-scoped
-  bookmarks for remembering positions.
+- Keep the app sandboxed. File access is user-opened files only. Reading positions are
+  keyed by resolved file path (no bookmarks), so a moved file starts fresh.
 - Menu shortcuts: ⌘+/⌘-/⌘0 zoom, ⌘9 fit width, ⌘←/⌘→ page, ⌘↑/⌘↓ first/last,
   ⌥⌘G go to page, ⌘[/⌘] back/forward, ⌘F find, ⌘G/⇧⌘G next/previous, ⌥⌘I invert.
 - Set PDFView scale limits before `autoScales`; the other order clamps a zero-sized
